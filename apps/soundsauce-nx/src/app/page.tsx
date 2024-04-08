@@ -1,9 +1,8 @@
-import styled from 'tailwind';
+import React from 'react';
 
-const StyledPage = styled.div`
-  .page {
-  }
-`;
+const StyledPage = ({ children }: { children: React.ReactNode }) => (
+  <div>{children}</div>
+);
 
 export default function Index() {
   /*
