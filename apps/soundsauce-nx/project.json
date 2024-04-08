@@ -1,0 +1,9 @@
+{
+  "name": "soundsauce-nx",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "apps/soundsauce-nx",
+  "projectType": "application",
+  "tags": [],
+  "// targets": "to see all targets run: nx show project soundsauce-nx --web",
+  "targets": {}
+}

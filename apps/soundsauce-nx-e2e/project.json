@@ -1,0 +1,9 @@
+{
+  "name": "soundsauce-nx-e2e",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "apps/soundsauce-nx-e2e/src",
+  "tags": [],
+  "implicitDependencies": ["soundsauce-nx"],
+  "// targets": "to see all targets run: nx show project soundsauce-nx-e2e --web",
+  "targets": {}
+}
