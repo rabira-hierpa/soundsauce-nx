@@ -5,5 +5,13 @@
   "projectType": "application",
   "tags": [],
   "// targets": "to see all targets run: nx show project soundsauce-nx --web",
-  "targets": {}
+  "targets": {
+    "build": {
+      "executor": "@nx/webpack:dev-server",
+      "options": {
+        "buildTarget": "soundsauce-nx:build",
+        "postcssConfig": "apps/soundsauce-nx/postcss.config.js"
+      }
+    }
+  }
 }
