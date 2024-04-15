@@ -1,4 +1,5 @@
-import { createSlice } from '@reduxjs/toolkit';
+import { PayloadAction, createSlice } from '@reduxjs/toolkit';
+import { baseUrl } from '../../../api/endpoints/todo.endpoints';
 
 const slice = createSlice({
   name: 'todos',
@@ -6,21 +7,44 @@ const slice = createSlice({
     todos: [] as Todo[],
   },
   reducers: {
-    createTodo: (state, action) => {
-      state.todos.push(action.payload);
-    },
-    getTodos: (state, action) => {
+    initTodos: (state, action: PayloadAction<Todo[]>) => {
       state.todos = action.payload;
     },
+    createTodo: (state, action) => {
+      async () => {
+        // Create new todo
+        const response = await fetch(baseUrl, {
+          method: 'POST',
+          body: JSON.stringify(action.payload),
+        });
+        const newTodo = await response.json();
+        state.todos.push(newTodo);
+      };
+    },
     updateTodo: (state, action) => {
-      state.todos.map((todo) =>
-        todo.id === action.payload.id ? action.payload : todo
-      );
+      async () => {
+        // Update todo
+        const response = await fetch(`${baseUrl}${action.payload.id}`, {
+          method: 'PUT',
+          body: JSON.stringify(action.payload),
+        });
+        const updatedTodo = await response.json();
+        state.todos = state.todos.map((todo) =>
+          todo.id === updatedTodo.id ? updatedTodo : todo
+        );
+      };
     },
     deleteTodo: (state, action) => {
-      state.todos.filter((todo) => todo.id !== action.payload);
+      async () => {
+        // Delete todo
+        await fetch(`${baseUrl}${action.payload}`, {
+          method: 'DELETE',
+        });
+        state.todos = state.todos.filter((todo) => todo.id !== action.payload);
+      };
     },
   },
 });
 
+export const { initTodos, createTodo, updateTodo, deleteTodo } = slice.actions;
 export default slice.reducer;
