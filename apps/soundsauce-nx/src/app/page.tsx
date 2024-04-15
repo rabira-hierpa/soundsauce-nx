@@ -46,7 +46,7 @@ const useStyles = makeStyles({
 
 export default function Index() {
   const [inputVal, setInputVal] = useState('');
-  const [todos, setTodos] = useState<any>([]);
+  const [todos, setTodos] = useState<Todo[]>([]);
   const [isEdited, setIsEdited] = useState(false);
   const [editedId, setEditedId] = useState(null);
   const classes = useStyles();
@@ -59,17 +59,25 @@ export default function Index() {
     if (!isEdited) {
       setTodos([
         ...todos,
-        { val: inputVal, isDone: false, id: new Date().getTime() },
+        {
+          title: inputVal,
+          completed: false,
+          id: new Date().getTime(),
+          userId: 1,
+        },
       ]);
     } else {
-      setTodos([...todos, { val: inputVal, isDone: false, id: editedId }]);
+      setTodos([
+        ...todos,
+        { title: inputVal, completed: false, id: editedId, userId: 1 },
+      ]);
     }
     setInputVal('');
     setIsEdited(false);
   };
 
   const onDelete = (id: any) => {
-    const newTodos = todos.filter((todo: any) => todo.id !== id);
+    const newTodos = todos.filter((todo: Todo) => todo.id !== id);
     setTodos(newTodos);
   };
 
@@ -87,7 +95,7 @@ export default function Index() {
     const newTodos = todos.filter((todo: any) => todo.id !== id);
     const editVal = todos.find((todo: any) => todo.id === id);
     setEditedId(editVal.id);
-    setInputVal(editVal.val);
+    setInputVal(editVal?.title);
     setTodos(newTodos);
     setIsEdited(true);
   };

@@ -1,5 +1,6 @@
 type Todo = {
-  val: string;
-  isDone: boolean;
+  title: string;
+  completed: boolean;
   id: number;
+  userId: number;
 };

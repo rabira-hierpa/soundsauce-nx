@@ -1,5 +1,5 @@
 'use client';
-import React from 'react';
+import React, { useEffect } from 'react';
 import {
   TextField,
   Button,
@@ -11,6 +11,9 @@ import {
   makeStyles,
 } from '@material-ui/core';
 import { useState } from 'react';
+import { useSelector } from 'react-redux';
+import StoreProvider from '../GlobalRedux/StoreProvider';
+
 const StyledPage = ({ children }: { children: React.ReactNode }) => (
   <div>{children}</div>
 );
@@ -46,9 +49,11 @@ const useStyles = makeStyles({
 export default function Todo() {
   const [inputVal, setInputVal] = useState('');
   const [todos, setTodos] = useState<any>([]);
+  const [loading, setLoading] = useState(true);
   const [isEdited, setIsEdited] = useState(false);
   const [editedId, setEditedId] = useState(null);
   const classes = useStyles();
+  const allTodos = useSelector((state: any) => state.todos);
 
   const onChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setInputVal(e.target.value);
@@ -58,24 +63,24 @@ export default function Todo() {
     if (!isEdited) {
       setTodos([
         ...todos,
-        { val: inputVal, isDone: false, id: new Date().getTime() },
+        { title: inputVal, completed: false, id: new Date().getTime() },
       ]);
     } else {
-      setTodos([...todos, { val: inputVal, isDone: false, id: editedId }]);
+      setTodos([...todos, { title: inputVal, completed: false, id: editedId }]);
     }
     setInputVal('');
     setIsEdited(false);
   };
 
   const onDelete = (id: any) => {
-    const newTodos = todos.filter((todo: any) => todo.id !== id);
+    const newTodos = todos.filter((todo: Todo) => todo.id !== id);
     setTodos(newTodos);
   };
 
   const handleDone = (id: any) => {
-    const updated = todos.map((todo: any) => {
+    const updated = todos.map((todo: Todo) => {
       if (todo.id === id) {
-        todo.isDone = !todo.isDone;
+        todo.completed = !todo.completed;
       }
       return todo;
     });
@@ -83,78 +88,95 @@ export default function Todo() {
   };
 
   const handleEdit = (id: any) => {
-    const newTodos = todos.filter((todo: any) => todo.id !== id);
-    const editVal = todos.find((todo: any) => todo.id === id);
+    const newTodos = todos.filter((todo: Todo) => todo.id !== id);
+    const editVal = todos.find((todo: Todo) => todo.id === id);
     setEditedId(editVal.id);
-    setInputVal(editVal.val);
+    setInputVal(editVal.title);
     setTodos(newTodos);
     setIsEdited(true);
   };
 
+  useEffect(() => {
+    fetch('/api/todos')
+      .then((res) => {
+        return res.json();
+      })
+      .then((data: any) => {
+        setTodos(data.slice(0, 10));
+      })
+      .catch((err) => console.log(err))
+      .finally(() => setLoading(false));
+  }, []);
+
   return (
-    <StyledPage>
-      <div className="wrapper">
-        <div className="container">
-          <div className="flex justify-center">
-            <h1 className="text-6xl py-10 font-semibold text-violet-500">
-              Redux Toolkit{' '}
-            </h1>
+    <StoreProvider>
+      <StyledPage>
+        <div className="wrapper">
+          <div className="container">
+            <div className="flex justify-center">
+              <h1 className="text-6xl py-10 font-semibold text-violet-500">
+                Redux Toolkit{' '}
+              </h1>
+            </div>
+            <Container component="main" className={classes.container}>
+              <TextField
+                variant="outlined"
+                onChange={onChange}
+                label="Title"
+                value={inputVal}
+                className={classes.input}
+              />
+              <Button
+                size="large"
+                variant={isEdited ? 'outlined' : 'contained'}
+                color="primary"
+                onClick={handleClick}
+                className={classes.addButton}
+                disabled={inputVal ? false : true}
+              >
+                {isEdited ? 'Edit Task' : 'Add Task'}
+              </Button>
+              <div className="flex justify-center py-10 ">
+                {loading && <div>Loading...</div>}
+              </div>
+              <List>
+                {todos?.map((todo: Todo) => {
+                  return (
+                    <ListItem key={todo.id} className={classes.list}>
+                      <Checkbox
+                        onClick={() => handleDone(todo.id)}
+                        checked={todo.completed}
+                      />
+                      <Typography
+                        className={classes.text}
+                        style={{ color: todo.completed ? 'green' : '' }}
+                        key={todo.id}
+                      >
+                        {todo.title}
+                      </Typography>
+                      <Button
+                        onClick={() => handleEdit(todo.id)}
+                        variant="contained"
+                        className={classes.listButtons}
+                      >
+                        Edit
+                      </Button>
+                      <Button
+                        onClick={() => onDelete(todo.id)}
+                        color="secondary"
+                        variant="contained"
+                        className={classes.listButtons}
+                      >
+                        delete
+                      </Button>
+                    </ListItem>
+                  );
+                })}
+              </List>
+            </Container>
           </div>
-          <Container component="main" className={classes.container}>
-            <TextField
-              variant="outlined"
-              onChange={onChange}
-              label="Title"
-              value={inputVal}
-              className={classes.input}
-            />
-            <Button
-              size="large"
-              variant={isEdited ? 'outlined' : 'contained'}
-              color="primary"
-              onClick={handleClick}
-              className={classes.addButton}
-              disabled={inputVal ? false : true}
-            >
-              {isEdited ? 'Edit Task' : 'Add Task'}
-            </Button>
-            <List>
-              {todos.map((todo: any) => {
-                return (
-                  <ListItem key={todo.id} className={classes.list}>
-                    <Checkbox
-                      onClick={() => handleDone(todo.id)}
-                      checked={todo.isDone}
-                    />
-                    <Typography
-                      className={classes.text}
-                      style={{ color: todo.isDone ? 'green' : '' }}
-                      key={todo.id}
-                    >
-                      {todo.val}
-                    </Typography>
-                    <Button
-                      onClick={() => handleEdit(todo.id)}
-                      variant="contained"
-                      className={classes.listButtons}
-                    >
-                      Edit
-                    </Button>
-                    <Button
-                      onClick={() => onDelete(todo.id)}
-                      color="secondary"
-                      variant="contained"
-                      className={classes.listButtons}
-                    >
-                      delete
-                    </Button>
-                  </ListItem>
-                );
-              })}
-            </List>
-          </Container>
         </div>
-      </div>
-    </StyledPage>
+      </StyledPage>
+    </StoreProvider>
   );
 }
