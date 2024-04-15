@@ -11,7 +11,6 @@ import {
   makeStyles,
 } from '@material-ui/core';
 import { useState } from 'react';
-import Link from 'next/link';
 const StyledPage = ({ children }: { children: React.ReactNode }) => (
   <div>{children}</div>
 );
@@ -44,7 +43,7 @@ const useStyles = makeStyles({
   },
 });
 
-export default function Index() {
+export default function Todo() {
   const [inputVal, setInputVal] = useState('');
   const [todos, setTodos] = useState<any>([]);
   const [isEdited, setIsEdited] = useState(false);
@@ -96,14 +95,10 @@ export default function Index() {
     <StyledPage>
       <div className="wrapper">
         <div className="container">
-          <div className="flex flex-col text-center justify-center">
+          <div className="flex justify-center">
             <h1 className="text-6xl py-10 font-semibold text-violet-500">
-              MUI Todo{' '}
+              Redux Toolkit{' '}
             </h1>
-            <Link className="text-3xl text-purple-300" href="/todo">
-              👆🏾 Goto Todo with Redux Implementation
-            </Link>
-            <div className="text-xl pt-10">👇🏾 Todo without Redux</div>
           </div>
           <Container component="main" className={classes.container}>
             <TextField
