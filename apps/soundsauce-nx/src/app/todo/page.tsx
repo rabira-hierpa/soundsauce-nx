@@ -8,8 +8,8 @@ import {
   List,
   ListItem,
   Container,
-  makeStyles,
-} from '@material-ui/core';
+} from '@mui/material';
+import { makeStyles } from '@mui/styles';
 import { useState } from 'react';
 import { useSelector } from 'react-redux';
 import StoreProvider from '../GlobalRedux/StoreProvider';
