@@ -99,6 +99,7 @@ export default function Todo() {
   useEffect(() => {
     fetch('/api/todos')
       .then((res) => {
+        console.log({ json: res.json() });
         return res.json();
       })
       .then((data: any) => {
