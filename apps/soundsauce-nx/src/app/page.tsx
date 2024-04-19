@@ -8,8 +8,8 @@ import {
   List,
   ListItem,
   Container,
-  makeStyles,
-} from '@material-ui/core';
+} from '@mui/material';
+import { makeStyles } from '@mui/styles';
 import { useState } from 'react';
 import Link from 'next/link';
 const StyledPage = ({ children }: { children: React.ReactNode }) => (
@@ -48,7 +48,7 @@ export default function Index() {
   const [inputVal, setInputVal] = useState('');
   const [todos, setTodos] = useState<Todo[]>([]);
   const [isEdited, setIsEdited] = useState(false);
-  const [editedId, setEditedId] = useState(null);
+  const [editedId, setEditedId] = useState<number | null>(null);
   const classes = useStyles();
 
   const onChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -66,7 +66,7 @@ export default function Index() {
           userId: 1,
         },
       ]);
-    } else {
+    } else if (editedId !== null) {
       setTodos([
         ...todos,
         { title: inputVal, completed: false, id: editedId, userId: 1 },
@@ -94,8 +94,8 @@ export default function Index() {
   const handleEdit = (id: any) => {
     const newTodos = todos.filter((todo: any) => todo.id !== id);
     const editVal = todos.find((todo: any) => todo.id === id);
-    setEditedId(editVal.id);
-    setInputVal(editVal?.title);
+    setEditedId(editVal?.id!);
+    setInputVal(editVal?.title!);
     setTodos(newTodos);
     setIsEdited(true);
   };
@@ -110,6 +110,10 @@ export default function Index() {
             </h1>
             <Link className="text-3xl text-purple-300" href="/todo">
               👆🏾 Goto Todo with Redux Implementation
+            </Link>
+            <Link className="text-3xl text-violet-600 py-5" href="/d3">
+              {' '}
+              D3 Visualization
             </Link>
             <div className="text-xl pt-10">👇🏾 Todo without Redux</div>
           </div>
