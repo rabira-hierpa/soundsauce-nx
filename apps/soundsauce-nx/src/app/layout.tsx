@@ -2,6 +2,7 @@ import { Provider } from 'react-redux';
 import './global.css';
 import { AppRouterCacheProvider } from '@mui/material-nextjs/v13-appRouter';
 import StoreProvider from './GlobalRedux/StoreProvider';
+import AppLayout from './app-layout';
 
 export const metadata = {
   title: 'SoundsauceNx',
@@ -25,7 +26,9 @@ export default function RootLayout({
       </head>
       <body>
         <AppRouterCacheProvider>
-          <StoreProvider>{children}</StoreProvider>
+          <StoreProvider>
+            <AppLayout>{children}</AppLayout>
+          </StoreProvider>
         </AppRouterCacheProvider>
       </body>
     </html>
