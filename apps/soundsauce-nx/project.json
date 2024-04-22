@@ -13,6 +13,19 @@
         "postcssConfig": "apps/soundsauce-nx/postcss.config.js",
         "tsConfig": "apps/soundsauce-nx/tsconfig.json"
       }
+    },
+    "serve": {
+      "executor": "@nrwl/web:dev-server",
+      "options": {
+        "buildTarget": "soundsauce-nx:build",
+        "postcssConfig": "apps/soundsauce-nx/postcss.config.js",
+        "port": 4200
+      },
+      "configurations": {
+        "production": {
+          "buildTarget": "soundsauce-nx:build:production"
+        }
+      }
     }
   }
 }
