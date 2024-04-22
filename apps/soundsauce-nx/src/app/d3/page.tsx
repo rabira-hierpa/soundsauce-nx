@@ -10,6 +10,7 @@ import { parse } from 'path';
 const D3Visualization = () => {
   const [csvData, setCsvData] = useState<ICSVData>();
   const [loading, setLoading] = useState<boolean>(true);
+  const [transformedData, setTransformedData] = useState<IGraphData[]>([]);
 
   useEffect(() => {
     fetch('/api/csv/get_noise_data')
@@ -41,19 +42,32 @@ const D3Visualization = () => {
       minWidth: 150,
     }));
   };
-  const transformedData: IGraphData[] = (csvData?.data ?? []).map(
-    (d: IData) => {
-      console.log('Start Time:', d['Start Time']);
-      const date = parseDate(d['Start Time']);
-      console.log('Parsed date:', date);
-      return {
-        date,
-        Leq: d.Leq,
-      };
-    }
-  );
 
-  console.log({ transformedData });
+  useEffect(() => {
+    if (csvData) {
+      const transformedData: any = (csvData?.data ?? [])
+        .map((d: IData) => {
+          try {
+            const date = parseDate(d['Start Time']);
+            if (date === null) {
+              throw new Error(`Failed to parse date: ${d['Start Time']}`);
+            }
+            return {
+              date: date,
+              Leq: d.Leq,
+            };
+          } catch (error) {
+            console.error(error);
+            return null;
+          }
+        })
+        .filter(Boolean); // remove null values
+
+      setTransformedData(transformedData);
+      console.log({ o: transformedData[0] });
+    }
+  }, [csvData]);
+
   if (loading) {
     return <div>Loading data...</div>;
   }

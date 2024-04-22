@@ -20,7 +20,6 @@ const LineChart: React.FC<LineChartProps> = ({
   const chartRef = useRef<SVGSVGElement | null>(null);
 
   useEffect(() => {
-    console.log({ data });
     if (chartRef.current) {
       const svg = d3.select(chartRef.current);
 
@@ -31,10 +30,10 @@ const LineChart: React.FC<LineChartProps> = ({
       const margin = { top: 20, right: 20, bottom: 30, left: 50 };
       const innerWidth = width - margin.left - margin.right;
       const innerHeight = height - margin.top - margin.bottom;
-      const parseDate = d3.timeParse('%Y-%m-%d');
+      const parsedDate = d3.timeParse('%Y-%m-%d');
 
       data.forEach((d: IGraphData) => {
-        d.date = parseDate(d.date);
+        d.date = d.date ? parsedDate(d.date.toString()) : new Date();
         d.Leq = +d.Leq;
       });
 
@@ -44,16 +43,15 @@ const LineChart: React.FC<LineChartProps> = ({
 
       const x = d3
         .scaleTime()
-        .domain(d3.extent(data, (d) => new Date()) as [Date, Date])
+        .domain(d3.extent(data, (d) => d.date) as [Date, Date])
         .range([0, innerWidth]);
       const y = d3
         .scaleLinear()
-        .domain([0, d3.max(data, (d) => d.Leq) as number])
+        .domain([0, d3.max(data, (d) => d.Leq) || 0])
         .range([innerHeight, 0]);
-
       const valueLine = d3
         .line<IGraphData>()
-        .x((d) => x(d.date))
+        .x((d) => (d.date ? x(d.date) : 0))
         .y((d) => y(d.Leq));
 
       chartGroup
