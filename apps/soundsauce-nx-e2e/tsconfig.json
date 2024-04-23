@@ -3,6 +3,7 @@
   "compilerOptions": {
     "allowJs": true,
     "outDir": "../../dist/out-tsc",
+    "moduleResolution": "NodeNext",
     "module": "NodeNext",
     "types": ["cypress", "node"],
     "sourceMap": false
