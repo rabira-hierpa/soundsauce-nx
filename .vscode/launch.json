@@ -1,0 +1,19 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "Nx: Debug",
+      "runtimeVersion": "18.18.0",
+      "program": "${workspaceFolder}/node_modules/@nrwl/cli/bin/nx.js",
+      "args": ["serve", "soundsauce-nx"],
+      "console": "integratedTerminal",
+      "internalConsoleOptions": "neverOpen",
+      "runtimeArgs": ["--nolazy", "-r", "ts-node/register/transpile-only"],
+      "outFiles": ["${workspaceFolder}/dist/out-tsc/**/*.js"],
+      "sourceMaps": true,
+      "cwd": "${workspaceFolder}"
+    }
+  ]
+}

@@ -7,11 +7,48 @@
   "// targets": "to see all targets run: nx show project soundsauce-nx --web",
   "targets": {
     "build": {
-      "executor": "@nx/webpack:dev-server",
+      "executor": "@nx/next:build",
+      "outputs": ["{options.outputPath}"],
+      "defaultConfiguration": "production",
       "options": {
+        "outputPath": "dist/apps/soundsauce-nx",
         "buildTarget": "soundsauce-nx:build",
         "postcssConfig": "apps/soundsauce-nx/postcss.config.js",
         "tsConfig": "apps/soundsauce-nx/tsconfig.json"
+      },
+      "configurations": {
+        "development": {
+          "outputPath": "dist/apps/dev/soundsauce-nx"
+        },
+        "production": {
+          "outputPath": "dist/apps/soundsauce-nx",
+          "buildTarget": "soundsauce-nx:build:production"
+        }
+      }
+    },
+    "serve": {
+      "executor": "@nx/next:server",
+      "options": {
+        "buildTarget": "soundsauce-nx:build",
+        "postcssConfig": "apps/soundsauce-nx/postcss.config.js",
+        "dev": true,
+        "port": 4200
+      },
+      "configurations": {
+        "development": {
+          "buildTarget": "soundsauce-nx:build:development",
+          "dev": true
+        },
+        "production": {
+          "buildTarget": "soundsauce-nx:build:production",
+          "dev": false
+        }
+      }
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "options": {
+        "lintFilePatterns": ["apps/soundsauce-nx/**/*.{ts,tsx,js,jsx}"]
       }
     }
   }

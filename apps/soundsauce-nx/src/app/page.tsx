@@ -12,6 +12,7 @@ import {
 import { makeStyles } from '@mui/styles';
 import { useState } from 'react';
 import Link from 'next/link';
+import { Todo } from './types';
 const StyledPage = ({ children }: { children: React.ReactNode }) => (
   <div>{children}</div>
 );
