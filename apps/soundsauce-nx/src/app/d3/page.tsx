@@ -5,7 +5,6 @@ import { DataGrid, GridColDef } from '@mui/x-data-grid';
 import LineChart from './charts/LineChart';
 import parseDate from '../../utils/parseDate';
 import { ICSVData, IData, IGraphData } from '../types';
-import { parse } from 'path';
 
 const D3Visualization = () => {
   const [csvData, setCsvData] = useState<ICSVData>();
@@ -64,20 +63,38 @@ const D3Visualization = () => {
         .filter(Boolean); // remove null values
 
       setTransformedData(transformedData);
-      console.log({ o: transformedData[0] });
     }
   }, [csvData]);
+
+  const [height, setHeight] = useState(window.innerHeight);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setHeight(window.innerHeight);
+    };
+
+    window.addEventListener('resize', handleResize);
+
+    // Cleanup function to remove the event listener when the component unmounts
+    return () => {
+      window.removeEventListener('resize', handleResize);
+    };
+  }, []);
 
   if (loading) {
     return <div>Loading data...</div>;
   }
 
   return (
-    <div className="flex flex-col mx-20">
+    <div className="flex">
       {transformedData.length && (
-        <LineChart data={transformedData} width={800} height={400} />
+        <LineChart
+          data={transformedData.splice(0, 800)}
+          width={1024}
+          height={height - 200}
+        />
       )}
-      <DataGrid
+      {/* <DataGrid
         autoHeight
         rows={csvData?.data ?? []}
         columns={getColumns(csvData?.data ?? [])}
@@ -87,7 +104,7 @@ const D3Visualization = () => {
         disableColumnMenu
         disableColumnSelector
         disableDensitySelector
-      />
+      /> */}
     </div>
   );
 };
