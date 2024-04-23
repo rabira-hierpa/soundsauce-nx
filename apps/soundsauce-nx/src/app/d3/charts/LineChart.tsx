@@ -1,7 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import * as d3 from 'd3';
 import { IGraphData, LineChartProps } from '../../types';
-
 /**
  * Renders a line chart using D3.js library.
  *
@@ -33,7 +32,7 @@ const LineChart: React.FC<LineChartProps> = ({
       const parsedDate = d3.timeParse('%Y-%m-%d');
 
       data.forEach((d: IGraphData) => {
-        d.date = d.date ? parsedDate(d.date.toString()) : new Date();
+        d.date = parsedDate(d.date.toISOString().split('T')[0]) as Date;
         d.Leq = +d.Leq;
       });
 
@@ -47,19 +46,38 @@ const LineChart: React.FC<LineChartProps> = ({
         .range([0, innerWidth]);
       const y = d3
         .scaleLinear()
-        .domain([0, d3.max(data, (d) => d.Leq) || 0])
+        .domain(d3.extent(data, (d) => d.Leq) as [number, number])
         .range([innerHeight, 0]);
+
+      const xAxis = d3
+        .axisBottom(x)
+        .tickFormat((domainValue: d3.AxisDomain, _index: number) => {
+          const date = domainValue as Date;
+          return d3.timeFormat('%Y-%m-%d')(date);
+        });
+
+      const yAxis = d3.axisLeft(y).ticks(5);
+
       const valueLine = d3
         .line<IGraphData>()
         .x((d) => (d.date ? x(d.date) : 0))
         .y((d) => y(d.Leq));
 
+      // x-axis label
       chartGroup
         .append('g')
-        .attr('transform', `translate(0, ${height})`)
-        .call(d3.axisBottom(x));
-      chartGroup.append('g').call(d3.axisLeft(y));
+        .attr('transform', `translate(0, ${innerHeight})`)
+        .call(xAxis)
+        .selectAll('text')
+        .style('text-anchor', 'end')
+        .attr('dx', '-.8em')
+        .attr('dy', '.15em')
+        .attr('transform', 'rotate(-65)');
 
+      // y-axis label
+      chartGroup.append('g').call(yAxis);
+
+      // Add the valueline path.
       chartGroup
         .append('path')
         .data([data])
@@ -68,74 +86,54 @@ const LineChart: React.FC<LineChartProps> = ({
         .attr('stroke', 'steelblue')
         .attr('stroke-width', 1.5)
         .attr('d', valueLine);
-      // const dateExtent = d3.extent(data, function (d) {
-      //   return parseDate(d.date);
-      // });
-      // Create x and y scales
-      // const xScale = d3
-      //   .scaleTime()
-      //   .domain(
-      //     dateExtent[0] === undefined ? [new Date(0), new Date(0)] : dateExtent
-      //   )
-      //   .range([0, innerWidth]);
 
-      // const yScale = d3
-      //   .scaleLinear()
-      //   .domain([
-      //     0,
-      //     d3.max(data, function (d) {
-      //       return d.Leq;
-      //     }) || 0,
-      //   ])
-      //   .range([innerHeight, 0]);
+      // Append a circle and text for the cursor point label
+      const focus = chartGroup.append('g').style('display', 'none');
+      focus
+        .append('circle')
+        .attr('class', 'focusCircle')
+        .attr('r', 5)
+        .style('fill', 'none')
+        .style('stroke', 'black');
+      focus
+        .append('text')
+        .attr('class', 'focusText')
+        .attr('x', 10)
+        .attr('dy', '.31em');
 
-      // const xAxis = d3.axisBottom(xScale).ticks(5);
-      // const yAxis = d3.axisLeft(yScale).ticks(10);
-      // Create line generator
-      // const valueLine = d3
-      //   .line<IGraphData & { date: Date | d3.NumberValue; Leq: number }>()
-      //   .x((d) => xScale(Number(d.date)))
-      //   .y((d) => yScale(d.Leq));
+      const tooltip = d3
+        .select('body')
+        .append('div')
+        .attr('class', 'tooltip')
+        .style('opacity', 0);
 
-      // const chartGroup = svg
-      //   .append('path')
-      //   .data([data])
-      //   .attr('class', 'line')
-      //   .attr('d', valueLine);
-      // const focus = svg
-      //   .append('g')
-      //   .attr('class', 'focus')
-      //   .style('display', 'none');
+      // Function to handle mousemove event
 
-      // focus.append('circle').attr('r', 4.5);
-
-      // focus.append('text').attr('x', 9).attr('dy', '.35em');
-
-      // function mousemove(this: any, event: MouseEvent) {
-      //   const x0: Date | d3.NumberValue = xScale.invert(d3.pointer(event, this)[0]);
-      //   const i: number = Math.round(x0);
-      //   const d0: number = data[i];
-      //   focus.attr('transform', `translate(${xScale(i)}, ${yScale(d0)})`);
-      //   focus.select('text').text(d0);
-      //   focus.select('text').text(d0);
-      // }
-
-      // Append chart group
-      // const chartGroup = svg
-      //   .append('g')
-      //   .attr('transform', `translate(${margin.left},${margin.top})`);
-
-      // Append line path
-      // chartGroup
-      //   .append('path')
-      //   .datum(data)
-      //   .attr('fill', 'none')
-      //   .attr('stroke', 'steelblue')
-      //   .attr('stroke-width', 2)
-      //   .attr('d', line)
-      //   .on('mouseover', () => focus.style('display', null))
-      //   .on('mouseout', () => focus.style('display', 'none'))
-      //   .on('mousemove', mousemove);
+      chartGroup
+        .append('rect')
+        .attr('class', 'overlay')
+        .attr('width', width)
+        .attr('height', height)
+        .style('fill', 'none')
+        .style('pointer-events', 'all')
+        .on('mousemove', (d: any) => {
+          const x1 = x.invert(d3.pointer(d, d.currentTarget)[0]);
+          const [x0] = d3.pointer(d, d.currentTarget);
+          const i = d3.bisector((d: IGraphData) => d.date).left(data, x1, 1);
+          const d0 = data[i - 1];
+          const d1 = data[i];
+          const d2 = x0 - d0.date.getTime() > d1.date.getTime() - x0 ? d1 : d0;
+          focus.attr('transform', `translate(${x(d2.date)}, ${y(d2.Leq)})`);
+          focus.select('.focusText').text(d2.Leq);
+          tooltip
+            .html(
+              `Date: ${d3
+                .timeFormat('%Y-%m-%d')(d2.date)
+                .toString()}<br/>Value: ${d2.Leq}`
+            )
+            .style('left', d3.pointer(d, d.currentTarget)[0] + 'px')
+            .style('top', d3.pointer(d, d.currentTarget)[1] - 28 + 'px');
+        });
     }
   }, [data, width, height]);
 
