@@ -5,7 +5,7 @@ type Todo = {
   userId: number;
 };
 type IGraphData = {
-  date: Date | null;
+  date: Date;
   Leq: number;
 };
 
