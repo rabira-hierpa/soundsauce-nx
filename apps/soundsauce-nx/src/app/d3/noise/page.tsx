@@ -10,7 +10,7 @@ const D3Visualization = () => {
   const [csvData, setCsvData] = useState<ICSVData>();
   const [loading, setLoading] = useState<boolean>(true);
   const [transformedData, setTransformedData] = useState<IGraphData[]>([]);
-
+  const [cursorPosition, setCursorPosition] = useState<number | null>(null);
   useEffect(() => {
     fetch('/api/csv/get_noise_data')
       .then((res) => res.text())
@@ -86,15 +86,18 @@ const D3Visualization = () => {
   }
 
   return (
-    <div className="flex">
-      {transformedData.length && (
+    <div className="flex flex-col">
+      {!!transformedData.length && (
         <NoiseChart
-          data={transformedData.splice(0, 800)}
-          width={1024}
-          height={height - 200}
+          data={transformedData}
+          width={2000}
+          height={500}
+          cursorPosition={cursorPosition}
+          setCursorPosition={setCursorPosition}
+          color={'#e85252'}
         />
       )}
-      {/* <DataGrid
+      <DataGrid
         autoHeight
         rows={csvData?.data ?? []}
         columns={getColumns(csvData?.data ?? [])}
@@ -104,7 +107,7 @@ const D3Visualization = () => {
         disableColumnMenu
         disableColumnSelector
         disableDensitySelector
-      /> */}
+      />
     </div>
   );
 };
