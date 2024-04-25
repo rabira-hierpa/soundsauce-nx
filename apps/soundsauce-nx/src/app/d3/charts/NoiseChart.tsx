@@ -41,13 +41,13 @@ export const NoiseChart = ({
       .scaleLinear()
       .domain([min || 0, max || 0])
       .range([boundsHeight, 0]);
-  }, [data, height]);
+  }, [boundsHeight, max, min]);
 
   // X axis
   const [xMin, xMax] = d3.extent(data, (d) => d.date) as [Date, Date];
   const xScale = useMemo(() => {
     return d3.scaleTime().domain([xMin, xMax]).range([0, boundsWidth]);
-  }, [data, width]);
+  }, [boundsWidth, xMax, xMin]);
 
   // Render the X and Y axis using d3.js, not react
   useEffect(() => {
