@@ -66,37 +66,29 @@ const D3Visualization = () => {
     }
   }, [csvData]);
 
-  const [height, setHeight] = useState(window.innerHeight);
-
-  useEffect(() => {
-    const handleResize = () => {
-      setHeight(window.innerHeight);
-    };
-
-    window.addEventListener('resize', handleResize);
-
-    // Cleanup function to remove the event listener when the component unmounts
-    return () => {
-      window.removeEventListener('resize', handleResize);
-    };
-  }, []);
-
   if (loading) {
     return <div>Loading data...</div>;
   }
 
   return (
     <div className="flex flex-col">
+      <div id="tooltip" style={{ position: 'absolute', opacity: 0 }}></div>
       {!!transformedData.length && (
-        <NoiseChart
-          data={transformedData}
-          width={2000}
-          height={500}
-          cursorPosition={cursorPosition}
-          setCursorPosition={setCursorPosition}
-          color={'#e85252'}
-        />
+        <>
+          <h3 className="text-xl text-center text-blue-500">
+            RAW Data visualization
+          </h3>
+          <NoiseChart
+            data={transformedData}
+            width={2000}
+            height={500}
+            cursorPosition={cursorPosition}
+            setCursorPosition={setCursorPosition}
+            color={'#e85252'}
+          />
+        </>
       )}
+      <h3 className="text-xl text-center text-blue-500 py-5">Tabular Data</h3>
       <DataGrid
         autoHeight
         rows={csvData?.data ?? []}
