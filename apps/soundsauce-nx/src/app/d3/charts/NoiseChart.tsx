@@ -46,14 +46,21 @@ export const NoiseChart = ({
   // X axis
   const [xMin, xMax] = d3.extent(data, (d) => d.date) as [Date, Date];
   const xScale = useMemo(() => {
-    return d3.scaleTime().domain([xMin, xMax]).range([0, boundsWidth]);
+    return d3
+      .scaleUtc()
+      .domain([xMin, xMax])
+      .range([0, boundsWidth])
+      .clamp(true);
   }, [boundsWidth, xMax, xMin]);
 
   // Render the X and Y axis using d3.js, not react
   useEffect(() => {
     const svgElement = d3.select(axesRef.current);
     svgElement.selectAll('*').remove();
-    const xAxisGenerator = d3.axisBottom(xScale);
+    const xAxisGenerator = d3
+      .axisBottom(xScale)
+      .ticks(width / 80)
+      .tickSizeOuter(0);
     svgElement
       .append('g')
       .attr('transform', 'translate(0,' + boundsHeight + ')')
@@ -61,7 +68,7 @@ export const NoiseChart = ({
 
     const yAxisGenerator = d3.axisLeft(yScale);
     svgElement.append('g').call(yAxisGenerator);
-  }, [xScale, yScale, boundsHeight]);
+  }, [xScale, yScale, boundsHeight, data, width]);
 
   // Build the line
   const lineBuilder = d3
@@ -76,13 +83,12 @@ export const NoiseChart = ({
   //
   const getClosestPoint = (cursorPixelPosition: number): IGraphData => {
     const x = xScale.invert(cursorPixelPosition);
-    let minDistance = xMin.getTime();
+    let minDistance = Infinity;
     let closest: IGraphData = data[0];
 
     for (const point of data) {
       const distance = Math.abs(point.date.getTime() - x.getTime());
       if (distance < minDistance) {
-        console.log({ distance });
         minDistance = distance;
         closest = point;
       }
@@ -181,7 +187,15 @@ const Cursor = ({ x, y, height, color }: CursorProps) => {
         stroke="black"
         strokeWidth={1}
       />
-      <circle cx={x ?? 0} cy={y} r={5} fill={color} />
+      <circle
+        cx={x ?? 0}
+        cy={y}
+        r={5}
+        fill={color}
+        onMouseOver={(event) => {
+          console.log({ event });
+        }}
+      />
     </>
   );
 };
