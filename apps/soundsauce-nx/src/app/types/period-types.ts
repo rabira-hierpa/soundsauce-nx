@@ -12,8 +12,10 @@ export type PeriodData = {
   STARTDATETIME: string;
   OCTAVECOUNT: string;
   LAFMAX: number;
-  LAFMAXTIME: Date | string;
+  LAE: number;
+  LAEQ: number;
   LAFMIN: number;
+  LAFMAXTIME: Date | string;
   LAFMINTIME: string;
   LAIMAX: string;
   LAIMAXTIME: string;
@@ -53,8 +55,7 @@ export type PeriodData = {
   LCPKTIME: string;
   LZPK: string;
   LZPKTIME: string;
-  LAE: string;
-  LAEQ: string;
+
   LAEQT80: string;
   LAFTM3: string;
   LAFTM5: string;
