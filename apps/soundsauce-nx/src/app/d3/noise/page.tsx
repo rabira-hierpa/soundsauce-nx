@@ -10,7 +10,7 @@ const D3Visualization = () => {
   const [csvData, setCsvData] = useState<ICSVData>();
   const [loading, setLoading] = useState<boolean>(true);
   const [transformedData, setTransformedData] = useState<IGraphData[]>([]);
-
+  const [cursorPosition, setCursorPosition] = useState<number | null>(null);
   useEffect(() => {
     fetch('/api/csv/get_noise_data')
       .then((res) => res.text())
@@ -66,35 +66,30 @@ const D3Visualization = () => {
     }
   }, [csvData]);
 
-  const [height, setHeight] = useState(window.innerHeight);
-
-  useEffect(() => {
-    const handleResize = () => {
-      setHeight(window.innerHeight);
-    };
-
-    window.addEventListener('resize', handleResize);
-
-    // Cleanup function to remove the event listener when the component unmounts
-    return () => {
-      window.removeEventListener('resize', handleResize);
-    };
-  }, []);
-
   if (loading) {
     return <div>Loading data...</div>;
   }
 
   return (
-    <div className="flex">
-      {transformedData.length && (
-        <NoiseChart
-          data={transformedData.splice(0, 800)}
-          width={1024}
-          height={height - 200}
-        />
+    <div className="flex flex-col">
+      <div id="tooltip" style={{ position: 'absolute', opacity: 0 }}></div>
+      {!!transformedData.length && (
+        <>
+          <h3 className="text-xl text-center text-blue-500">
+            RAW Data visualization
+          </h3>
+          <NoiseChart
+            data={transformedData}
+            width={2000}
+            height={500}
+            cursorPosition={cursorPosition}
+            setCursorPosition={setCursorPosition}
+            color={'#e85252'}
+          />
+        </>
       )}
-      {/* <DataGrid
+      <h3 className="text-xl text-center text-blue-500 py-5">Tabular Data</h3>
+      <DataGrid
         autoHeight
         rows={csvData?.data ?? []}
         columns={getColumns(csvData?.data ?? [])}
@@ -104,7 +99,7 @@ const D3Visualization = () => {
         disableColumnMenu
         disableColumnSelector
         disableDensitySelector
-      /> */}
+      />
     </div>
   );
 };

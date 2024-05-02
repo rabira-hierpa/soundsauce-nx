@@ -47,6 +47,20 @@ const useStyles = makeStyles({
 
 export default function Index() {
   const [inputVal, setInputVal] = useState('');
+  const [charts] = useState([
+    {
+      title: 'Noise Chart',
+      path: '/d3/noise',
+    },
+    {
+      title: 'Period Chart',
+      path: '/d3/period',
+    },
+    {
+      title: 'Line Chart',
+      path: '/d3/line',
+    },
+  ]);
   const [todos, setTodos] = useState<Todo[]>([]);
   const [isEdited, setIsEdited] = useState(false);
   const [editedId, setEditedId] = useState<number | null>(null);
@@ -112,10 +126,17 @@ export default function Index() {
             <Link className="text-3xl text-purple-300" href="/todo">
               👆🏾 Goto Todo with Redux Implementation
             </Link>
-            <Link className="text-3xl text-violet-600 py-5" href="/d3">
-              {' '}
-              D3 Visualization
-            </Link>
+            <div className="flex space-x-5 justify-center py-5">
+              {charts.map((chart) => (
+                <Link
+                  key={chart.title}
+                  href={chart.path}
+                  className="text-xl text-yellow-500 hover:cursor-pointer "
+                >
+                  {chart.title}
+                </Link>
+              ))}
+            </div>
             <div className="text-xl pt-10">👇🏾 Todo without Redux</div>
           </div>
           <Container component="main" className={classes.container}>

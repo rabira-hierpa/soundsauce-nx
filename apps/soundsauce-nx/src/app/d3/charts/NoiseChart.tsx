@@ -27,30 +27,40 @@ export const NoiseChart = ({
   const axesRef = useRef(null);
   const boundsWidth = width - MARGIN.right - MARGIN.left;
   const boundsHeight = height - MARGIN.top - MARGIN.bottom;
+  const parsedDate = d3.timeParse('%Y-%m-%d');
+
+  data.forEach((d: IGraphData) => {
+    d.date = parsedDate(d.date.toISOString().split('T')[0]) as Date;
+    d.Leq = +d.Leq;
+  });
 
   // Y axis
-  const [min, max] = d3.extent(data, (d) => d.y);
+  const [min, max] = d3.extent(data, (d) => d.Leq);
   const yScale = useMemo(() => {
     return d3
       .scaleLinear()
-      .domain([0, max || 0])
+      .domain([min || 0, max || 0])
       .range([boundsHeight, 0]);
-  }, [data, height]);
+  }, [boundsHeight, max, min]);
 
   // X axis
-  const [xMin, xMax] = d3.extent(data, (d) => d.x);
+  const [xMin, xMax] = d3.extent(data, (d) => d.date) as [Date, Date];
   const xScale = useMemo(() => {
     return d3
-      .scaleLinear()
-      .domain([0, xMax || 0])
-      .range([0, boundsWidth]);
-  }, [data, width]);
+      .scaleUtc()
+      .domain([xMin, xMax])
+      .range([0, boundsWidth])
+      .clamp(true);
+  }, [boundsWidth, xMax, xMin]);
 
   // Render the X and Y axis using d3.js, not react
   useEffect(() => {
     const svgElement = d3.select(axesRef.current);
     svgElement.selectAll('*').remove();
-    const xAxisGenerator = d3.axisBottom(xScale);
+    const xAxisGenerator = d3
+      .axisBottom(xScale)
+      .ticks(width / 80)
+      .tickSizeOuter(0);
     svgElement
       .append('g')
       .attr('transform', 'translate(0,' + boundsHeight + ')')
@@ -58,27 +68,26 @@ export const NoiseChart = ({
 
     const yAxisGenerator = d3.axisLeft(yScale);
     svgElement.append('g').call(yAxisGenerator);
-  }, [xScale, yScale, boundsHeight]);
+  }, [xScale, yScale, boundsHeight, data, width]);
 
   // Build the line
   const lineBuilder = d3
     .line<IGraphData>()
-    .x((d) => xScale(d.x))
-    .y((d) => yScale(d.y));
+    .x((d) => xScale(d.date))
+    .y((d) => yScale(d.Leq));
   const linePath = lineBuilder(data);
   if (!linePath) {
     return null;
   }
 
   //
-  const getClosestPoint = (cursorPixelPosition: number) => {
+  const getClosestPoint = (cursorPixelPosition: number): IGraphData => {
     const x = xScale.invert(cursorPixelPosition);
-
     let minDistance = Infinity;
-    let closest: IGraphData | null = null;
+    let closest: IGraphData = data[0];
 
     for (const point of data) {
-      const distance = Math.abs(point.x - x);
+      const distance = Math.abs(point.date.getTime() - x.getTime());
       if (distance < minDistance) {
         minDistance = distance;
         closest = point;
@@ -95,7 +104,7 @@ export const NoiseChart = ({
 
     const closest = getClosestPoint(mouseX);
 
-    setCursorPosition(xScale(closest!.x));
+    setCursorPosition(xScale(closest.date));
   };
 
   return (
@@ -116,8 +125,14 @@ export const NoiseChart = ({
           {cursorPosition && (
             <Cursor
               height={boundsHeight}
-              x={cursorPosition}
-              y={yScale(getClosestPoint(cursorPosition ?? 0)?.y ?? 0)}
+              x={Math.max(0, Math.min(boundsWidth, cursorPosition))}
+              y={Math.max(
+                0,
+                Math.min(
+                  boundsHeight,
+                  yScale(getClosestPoint(cursorPosition)?.Leq)
+                )
+              )}
               color={color}
             />
           )}
@@ -172,7 +187,15 @@ const Cursor = ({ x, y, height, color }: CursorProps) => {
         stroke="black"
         strokeWidth={1}
       />
-      <circle cx={x ?? 0} cy={y} r={5} fill={color} />
+      <circle
+        cx={x ?? 0}
+        cy={y}
+        r={5}
+        fill={color}
+        onMouseOver={(event) => {
+          console.log({ event });
+        }}
+      />
     </>
   );
 };

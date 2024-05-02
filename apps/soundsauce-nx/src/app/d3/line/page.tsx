@@ -2,9 +2,9 @@
 import React, { useEffect, useState } from 'react';
 import Papa from 'papaparse';
 import { DataGrid, GridColDef } from '@mui/x-data-grid';
-import LineChart from './charts/LineChart';
-import parseDate from '../../utils/parseDate';
-import { ICSVData, IData, IGraphData } from '../types';
+import LineChart from '../charts/LineChart';
+import parseDate from '../../../utils/parseDate';
+import { ICSVData, IData, IGraphData } from '../../types';
 
 const D3Visualization = () => {
   const [csvData, setCsvData] = useState<ICSVData>();
