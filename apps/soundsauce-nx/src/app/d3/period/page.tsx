@@ -8,18 +8,26 @@ import { ParsedPeriodData, PeriodData } from '../../types/period-types';
 const D3PeriodDataVisualization = () => {
   const [csvData, setCsvData] = useState<PeriodData[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
+  const [availableDateIntervals, setAvailableDateIntervals] = useState<
+    string[]
+  >([]);
 
   useEffect(() => {
     fetch('/api/csv/get_period_data')
       .then((res) => res.text())
       .then((data: any) => {
-        const lines = data.split('\n');
-        const dataIndex = lines.indexOf('[data]') + 1;
-        const csvData = lines.slice(dataIndex).join('\n');
-        const result = Papa.parse(csvData, {
+        const result = Papa.parse(data, {
           header: true,
         }) as ParsedPeriodData;
+        const dates = result.data.map(
+          (d) => String(d.ENDDATETIME).split(' ')[0]
+        );
+        const uniqueDates = new Set(dates);
+        const _dateIntervals = Array.from(uniqueDates);
         setCsvData(result.data);
+        setAvailableDateIntervals(
+          _dateIntervals.filter((value) => value !== 'undefined')
+        );
       })
       .catch((err) => {
         console.error({ err });
@@ -47,35 +55,34 @@ const D3PeriodDataVisualization = () => {
   }
 
   return (
-    <div className="flex flex-col  mx-auto">
+    <div className="flex flex-col flex-grow ">
       <div id="tooltip" style={{ position: 'absolute', opacity: 0 }}></div>
 
-      {
-        <>
-          <div className="w-full h-[1200px]">
-            <h3 className="text-xl text-center text-blue-500">
-              RAW Period Data visualization
-            </h3>
-            <PeriodChart data={csvData} />
-          </div>
-          <h3 className="text-xl text-center text-blue-500 py-5">
-            Tabular Data,
-          </h3>
-          <div className="mx-20">
-            <DataGrid
-              autoHeight
-              rows={csvData}
-              getRowId={(row) => row.ID}
-              columns={getColumns(csvData)}
-              density="compact"
-              scrollbarSize={17}
-              disableColumnMenu
-              disableColumnSelector
-              disableDensitySelector
-            />
-          </div>
-        </>
-      }
+      <div className="flex-auto ">
+        <h3 className="text-xl text-center text-blue-500">
+          RAW Period Data visualization
+        </h3>
+
+        <PeriodChart data={csvData} availableDates={availableDateIntervals} />
+      </div>
+
+      <h3 className="text-xl text-center text-blue-500 py-5">Tabular Data,</h3>
+      <div
+        className="mx-20"
+        style={{ width: window.innerWidth - window.innerWidth * 0.25 }}
+      >
+        <DataGrid
+          autoHeight
+          rows={csvData}
+          getRowId={(row) => row.ID}
+          columns={getColumns(csvData)}
+          density="compact"
+          scrollbarSize={17}
+          disableColumnMenu
+          disableColumnSelector
+          disableDensitySelector
+        />
+      </div>
     </div>
   );
 };
