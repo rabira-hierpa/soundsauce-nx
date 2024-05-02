@@ -7,6 +7,7 @@ import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { DateCalendar } from '@mui/x-date-pickers/DateCalendar';
 import dayjs from 'dayjs';
+import MeasurementValues from './(components)/line-values';
 
 interface LineChartProps {
   data: PeriodData[];
@@ -19,6 +20,10 @@ const PeriodChart: React.FC<LineChartProps> = ({ data, availableDates }) => {
     TimeInterval.FIFTEEN_MINUTES
   );
   const [selectedData, setSelectedData] = useState<Date | null>(null);
+  const [typedData, setTypedData] = useState<PeriodData[]>([]);
+  const [availableMeasurements, setAvailableMeasurements] = useState<
+    (keyof PeriodData)[]
+  >([]);
   const [selectedMeasurements, setSelectedMeasurements] = useState<
     (keyof PeriodData)[]
   >([]);
@@ -130,14 +135,7 @@ const PeriodChart: React.FC<LineChartProps> = ({ data, availableDates }) => {
       .domain(['LAFMAX', 'LAFMIN', 'LAE', 'LAEQ'])
       .range(['lightblue', 'orange', 'red', 'green']);
 
-    // create the line generator for lineLAFMAX
-    const lineLAFMAX = d3
-      .line<PeriodData>()
-      .x((d) => x(d.ENDDATETIME))
-      .y((d) => y(d.LAFMAX));
-
     //  create the line generator for properties
-
     const generateLineGraphs = (properties: (keyof PeriodData)[]) => {
       return properties.map((property) =>
         d3
@@ -146,8 +144,9 @@ const PeriodChart: React.FC<LineChartProps> = ({ data, availableDates }) => {
           .y((d) => y(+d[property]))
       );
     };
-    const lineGenerators = generateLineGraphs(_selectedMeasurements);
-    console.log({ lineGenerators });
+    const lineGenerators = generateLineGraphs(
+      selectedMeasurements || _selectedMeasurements
+    );
 
     if (lineGenerators.length) {
       lineGenerators.map((lineGenerator, index) => {
@@ -197,7 +196,6 @@ const PeriodChart: React.FC<LineChartProps> = ({ data, availableDates }) => {
         dayjs(d1.ENDDATETIME).isBefore(dayjs(x0))
           ? d1
           : d0;
-      // console.log({ xCoord, x1, id: d.ID.slice(0, 3) });
       const xPos = x(d.ENDDATETIME);
       const yPos = y(d.LAFMAX);
 
@@ -217,7 +215,14 @@ const PeriodChart: React.FC<LineChartProps> = ({ data, availableDates }) => {
             'HH:mm'
           )}<br><strong>LAFMAX:</strong> ${
             d.LAFMAX !== undefined ? d.LAFMAX + 'dB' : 'N/A'
-          }`
+          }<br><strong>LAFMIN:</strong> ${
+            d.LAFMIN !== undefined ? d.LAFMIN + 'dB' : 'N/A'
+          }<br><strong>LAE:</strong> ${
+            d.LAE !== undefined ? d.LAE + 'dB' : 'N/A'
+          }<br><strong>LAEQ:</strong> ${
+            d.LAEQ !== undefined ? d.LAEQ + 'dB' : 'N/A'
+          }<br>
+            `
         );
     });
 
@@ -225,6 +230,34 @@ const PeriodChart: React.FC<LineChartProps> = ({ data, availableDates }) => {
       circle.attr('r', 0);
       tooltip.style('display', 'none');
     });
+
+    // Define the legend
+    const legend = svg
+      .selectAll('.legend')
+      .data(color.domain())
+      .enter()
+      .append('g')
+      .attr('class', 'legend')
+      .attr('transform', (d, i) => `translate(0,${i * 20})`);
+
+    // Add the colored rectangles
+    legend
+      .append('rect')
+      .attr('x', width - 40)
+      .attr('width', 18)
+      .attr('height', 18)
+      .style('fill', color)
+      .style('stroke-opacity', 10)
+      .style('fill-opacity', 1);
+
+    // Add the text labels
+    legend
+      .append('text')
+      .attr('x', width - 50)
+      .attr('y', 9)
+      .attr('dy', '.35em')
+      .style('text-anchor', 'end')
+      .text((d: string) => d);
   }
 
   useEffect(() => {
@@ -243,14 +276,26 @@ const PeriodChart: React.FC<LineChartProps> = ({ data, availableDates }) => {
         LAE: +d.LAE,
         LAEQ: +d.LAEQ,
       }));
+      setTypedData(typedData);
       const measurements = Object.entries(typedData[0])
-        .filter(([key, value]) => typeof value === 'number')
+        .filter(([, value]) => typeof value === 'number')
         .map(([key]) => key) as (keyof PeriodData)[];
-      console.log({ measurements });
+      setAvailableMeasurements(measurements);
       setSelectedMeasurements(measurements);
       constructLineGraph(typedData, selectedData, timeInterval, measurements);
     }
   }, [data, selectedData, timeInterval]);
+
+  useEffect(() => {
+    if (typedData.length && selectedData) {
+      constructLineGraph(
+        typedData,
+        selectedData,
+        timeInterval,
+        selectedMeasurements
+      );
+    }
+  }, [selectedMeasurements]);
 
   return (
     <div className="flex  space-x-5">
@@ -263,6 +308,15 @@ const PeriodChart: React.FC<LineChartProps> = ({ data, availableDates }) => {
             timeInterval={timeInterval}
             setTimeInterval={setTimeInterval}
           />
+        </div>
+        <div>
+          {!!availableMeasurements.length && (
+            <MeasurementValues
+              availableMeasurements={availableMeasurements}
+              selectedMeasurements={selectedMeasurements}
+              setSelectedMeasurements={setSelectedMeasurements}
+            />
+          )}
         </div>
         <LocalizationProvider dateAdapter={AdapterDayjs}>
           <p className="text-xl font-semibold">Range</p>
