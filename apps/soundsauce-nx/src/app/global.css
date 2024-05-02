@@ -415,15 +415,27 @@ summary svg {
 #menu-toggle:checked + #menu {
   display: block;
 }
+
+rect {
+  pointer-events: all;
+  fill-opacity: 0;
+  stroke-opacity: 0;
+  z-index: 1;
+  background-color: rgba(107, 114, 128, 1);
+  opacity: 0.5;
+}
+
 .tooltip {
   position: absolute;
-  text-align: center;
-  width: 80px;
-  height: 28px;
-  padding: 2px;
-  font: 12px sans-serif;
-  background: lightsteelblue;
-  border: 0px;
-  border-radius: 8px;
-  pointer-events: none;
+  padding: 10px;
+  background-color: steelblue;
+  color: white;
+  border: 1px solid white;
+  border-radius: 10px;
+  display: none;
+  opacity: 0.85;
+}
+
+.button {
+  @apply hover:bg-blue-700 text-white font-bold py-2 px-4 rounded;
 }
