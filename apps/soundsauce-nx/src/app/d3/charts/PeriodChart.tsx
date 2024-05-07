@@ -65,7 +65,6 @@ const PeriodChart: React.FC<LineChartProps> = ({ data, availableDates }) => {
 
     // define the x and y domains
 
-    //@ts-expect-error - TS doesn't know that d is a PeriodData object
     x.domain(d3.extent(data, (d) => d.ENDDATETIME) as [Date, Date]);
     y.domain([
       d3.min(data, (d) => d.LAFMIN) as number,
@@ -141,7 +140,6 @@ const PeriodChart: React.FC<LineChartProps> = ({ data, availableDates }) => {
       return properties.map((property) =>
         d3
           .line<PeriodData>()
-          //@ts-expect-error - TS doesn't know that d is a PeriodData object
           .x((d) => x(d.ENDDATETIME))
           .y((d) => y(+d[property]))
       );
@@ -181,18 +179,23 @@ const PeriodChart: React.FC<LineChartProps> = ({ data, availableDates }) => {
       .attr('height', height);
 
     // create the mouse move function
-
     listeningRect.on('mousemove', function (event) {
       const [xCoord] = d3.pointer(event, svgRef.current);
+      const bisectDate = d3.bisector(
+        (d: PeriodData, x: Date) => +d.ENDDATETIME - +x
+      ).center;
       const x0 = x.invert(xCoord);
-      const xQuntaize = d3
-        .scaleQuantize()
-        .domain(x.domain())
-        .range(d3.range(data.length).reverse());
-      const index = xQuntaize(x0);
-      console.log({ index, x0, xCoord });
-      const d = data[index];
-      // @ts-expect-error - TS doesn't know that d is a PeriodData object
+      const i = bisectDate(data, x0, 1);
+      const d0 = data[i - 1];
+      const d1 = data[i];
+      const d =
+        data[
+          d1 &&
+          //@ts-expect-error - TS doesn't know that d0 and d1 are PeriodData objects
+          Math.abs(x0 - d0.ENDDATETIME) > Math.abs(d1.ENDDATETIME - x0)
+            ? i
+            : i - 1
+        ];
       const xPos = x(d.ENDDATETIME);
       const yPos = y(d.LAFMAX);
 
@@ -256,6 +259,32 @@ const PeriodChart: React.FC<LineChartProps> = ({ data, availableDates }) => {
       .attr('dy', '.35em')
       .style('text-anchor', 'end')
       .text((d: string) => d);
+
+    // Define the zoom behavior
+    const zoom = d3
+      .zoom()
+      .scaleExtent([1, 10]) // This controls how much you can zoom in and out
+      .on('zoom', (event) => {
+        const transform = event.transform;
+        const updatedXScale = transform.rescaleX(x);
+        const updatedYScale = transform.rescaleY(y);
+
+        // Update the axes with the new scale
+        xAxisDate.call(d3.axisBottom(updatedXScale));
+        yAxis.call(d3.axisLeft(updatedYScale));
+
+        // Update the line path with the new scales
+        lineGenerator.x((d) => updatedXScale(d.ENDDATETIME));
+        lineGenerator.y((d) => updatedYScale(d.LAFMAX));
+        linePath.attr('d', lineGenerator(data));
+
+        // Update the circle position with the new scales
+        circle.attr('cx', (d) => updatedXScale(d.ENDDATETIME));
+        circle.attr('cy', (d) => updatedYScale(d.LAFMAX));
+      });
+
+    // Apply the zoom behavior to the SVG
+    svg.call(zoom);
   }
 
   useEffect(() => {
@@ -265,14 +294,20 @@ const PeriodChart: React.FC<LineChartProps> = ({ data, availableDates }) => {
           d.ENDDATETIME?.toString().split(' ')[0] ===
           new Date(selectedData!).toISOString().split('T')[0]
       );
-      const typedData = filteredData.map((d) => ({
-        ...d,
-        ENDDATETIME: new Date(d.ENDDATETIME),
-        LAFMAX: +d.LAFMAX,
-        LAFMIN: +d.LAFMIN,
-        LAE: +d.LAE,
-        LAEQ: +d.LAEQ,
-      }));
+      const compareMinutes = (a: PeriodData, b: PeriodData) => {
+        return +a.ENDDATETIME - +b.ENDDATETIME;
+      };
+      const typedData = filteredData
+        .map((d) => ({
+          ...d,
+          ENDDATETIME: new Date(d.ENDDATETIME),
+          LAFMAX: +d.LAFMAX,
+          LAFMIN: +d.LAFMIN,
+          LAE: +d.LAE,
+          LAEQ: +d.LAEQ,
+        }))
+        .sort(compareMinutes);
+
       setTypedData(typedData);
       const measurements = Object.entries(typedData[0])
         .filter(([, value]) => typeof value === 'number')

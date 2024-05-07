@@ -3,7 +3,7 @@ export type PeriodData = {
   RESULTID: string;
   BATTERYLOW: string;
   DURATIONSEC: string;
-  ENDDATETIME: string | Date;
+  ENDDATETIME: Date;
   NOTES: string;
   OVERLOAD: string;
   PAUSEDURATIONSEC: string;
