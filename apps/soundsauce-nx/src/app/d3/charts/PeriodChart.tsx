@@ -37,7 +37,6 @@ const PeriodChart: React.FC<LineChartProps> = ({ data, availableDates }) => {
 
   function constructLineGraph(
     data: PeriodData[],
-    selectedData: Date,
     timeInterval: TimeInterval,
     _selectedMeasurements: (keyof PeriodData)[]
   ) {
@@ -66,6 +65,7 @@ const PeriodChart: React.FC<LineChartProps> = ({ data, availableDates }) => {
 
     // define the x and y domains
 
+    //@ts-expect-error - TS doesn't know that d is a PeriodData object
     x.domain(d3.extent(data, (d) => d.ENDDATETIME) as [Date, Date]);
     y.domain([
       d3.min(data, (d) => d.LAFMIN) as number,
@@ -121,6 +121,7 @@ const PeriodChart: React.FC<LineChartProps> = ({ data, availableDates }) => {
     //Add horizontal gridlines
     svg
       .selectAll('yGrid')
+      //@ts-expect-error - TS doesn't know that d is a number
       .data(y.ticks(d3.max(data, (d) => d.LAFMAX) / 10).slice(1))
       .join('line')
       .attr('x1', 0)
@@ -140,6 +141,7 @@ const PeriodChart: React.FC<LineChartProps> = ({ data, availableDates }) => {
       return properties.map((property) =>
         d3
           .line<PeriodData>()
+          //@ts-expect-error - TS doesn't know that d is a PeriodData object
           .x((d) => x(d.ENDDATETIME))
           .y((d) => y(+d[property]))
       );
@@ -154,6 +156,7 @@ const PeriodChart: React.FC<LineChartProps> = ({ data, availableDates }) => {
           .append('path')
           .datum(data)
           .attr('fill', 'none')
+          //@ts-expect-error - TS doesn't know color is d3 object with predefined color
           .attr('stroke', color(_selectedMeasurements[index]))
           .attr('stroke-width', 1.5)
           .attr('d', lineGenerator as any);
@@ -181,21 +184,15 @@ const PeriodChart: React.FC<LineChartProps> = ({ data, availableDates }) => {
 
     listeningRect.on('mousemove', function (event) {
       const [xCoord] = d3.pointer(event, svgRef.current);
-      const bisectDate = d3.bisector(
-        (d: PeriodData) => new Date(d.ENDDATETIME)
-      ).left;
       const x0 = x.invert(xCoord);
-      const x1 = data.findIndex((d) =>
-        dayjs(d.ENDDATETIME).isSame(dayjs(x0), 'minute')
-      );
-      const i = bisectDate(data, x0, 1);
-      const d0 = data[x1 - 1];
-      const d1 = data[x1];
-      const d =
-        dayjs(x0).isBefore(dayjs(d0.ENDDATETIME)) &&
-        dayjs(d1.ENDDATETIME).isBefore(dayjs(x0))
-          ? d1
-          : d0;
+      const xQuntaize = d3
+        .scaleQuantize()
+        .domain(x.domain())
+        .range(d3.range(data.length).reverse());
+      const index = xQuntaize(x0);
+      console.log({ index, x0, xCoord });
+      const d = data[index];
+      // @ts-expect-error - TS doesn't know that d is a PeriodData object
       const xPos = x(d.ENDDATETIME);
       const yPos = y(d.LAFMAX);
 
@@ -243,9 +240,10 @@ const PeriodChart: React.FC<LineChartProps> = ({ data, availableDates }) => {
     // Add the colored rectangles
     legend
       .append('rect')
-      .attr('x', width - 40)
+      .attr('x', width - 140)
       .attr('width', 18)
       .attr('height', 18)
+      //@ts-expect-error - TS doesn't know color is a d3 object with predefined colors
       .style('fill', color)
       .style('stroke-opacity', 10)
       .style('fill-opacity', 1);
@@ -253,7 +251,7 @@ const PeriodChart: React.FC<LineChartProps> = ({ data, availableDates }) => {
     // Add the text labels
     legend
       .append('text')
-      .attr('x', width - 50)
+      .attr('x', width - 150)
       .attr('y', 9)
       .attr('dy', '.35em')
       .style('text-anchor', 'end')
@@ -261,7 +259,6 @@ const PeriodChart: React.FC<LineChartProps> = ({ data, availableDates }) => {
   }
 
   useEffect(() => {
-    // Select the SVG group and remove all its children
     if (svgRef.current && !!data.length && selectedData) {
       const filteredData = data.filter(
         (d) =>
@@ -282,23 +279,20 @@ const PeriodChart: React.FC<LineChartProps> = ({ data, availableDates }) => {
         .map(([key]) => key) as (keyof PeriodData)[];
       setAvailableMeasurements(measurements);
       setSelectedMeasurements(measurements);
-      constructLineGraph(typedData, selectedData, timeInterval, measurements);
+      constructLineGraph(typedData, timeInterval, measurements);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [data, selectedData, timeInterval]);
 
   useEffect(() => {
     if (typedData.length && selectedData) {
-      constructLineGraph(
-        typedData,
-        selectedData,
-        timeInterval,
-        selectedMeasurements
-      );
+      constructLineGraph(typedData, timeInterval, selectedMeasurements);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedMeasurements]);
 
   return (
-    <div className="flex  space-x-5">
+    <div className="flex flex-col space-x-5">
       <div id="tooltip"></div>
       <svg ref={svgRef} />
       <div className="flex flex-col flex-grow text-center">
@@ -306,7 +300,7 @@ const PeriodChart: React.FC<LineChartProps> = ({ data, availableDates }) => {
           <p className="text-center text-xl font-semibold">Time Interval</p>
           <TimeIntervalGroup
             timeInterval={timeInterval}
-            setTimeInterval={setTimeInterval}
+            setInterval={setTimeInterval}
           />
         </div>
         <div>
