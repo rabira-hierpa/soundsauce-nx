@@ -4,30 +4,32 @@ import Papa from 'papaparse';
 import { DataGrid, GridColDef } from '@mui/x-data-grid';
 import PeriodChart from '../charts/PeriodChart';
 import { ParsedPeriodData, PeriodData } from '../../types/period-types';
+import LargeChart from '../charts/LargeChart';
 
 const D3PeriodDataVisualization = () => {
-  const [csvData, setCsvData] = useState<PeriodData[]>([]);
+  const [csvData, setCsvData] = useState<any>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [availableDateIntervals, setAvailableDateIntervals] = useState<
     string[]
   >([]);
 
   useEffect(() => {
-    fetch('/api/csv/get_period_data')
+    fetch('/api/csv/get_large_data')
       .then((res) => res.text())
       .then((data: any) => {
         const result = Papa.parse(data, {
           header: true,
-        }) as ParsedPeriodData;
-        const dates = result.data.map(
-          (d) => String(d.ENDDATETIME).split(' ')[0]
-        );
-        const uniqueDates = new Set(dates);
-        const _dateIntervals = Array.from(uniqueDates);
+        }) as any;
+        // const dates = result.data.map(
+        //   (d) => String(d.ENDDATETIME).split(' ')[0]
+        // );
+        // const uniqueDates = new Set(dates);
+        // const _dateIntervals = Array.from(uniqueDates);
+        console.log({ result: result.data[0] });
         setCsvData(result.data);
-        setAvailableDateIntervals(
-          _dateIntervals.filter((value) => value !== 'undefined')
-        );
+        // setAvailableDateIntervals(
+        //   _dateIntervals.filter((value) => value !== 'undefined')
+        // );
       })
       .catch((err) => {
         console.error({ err });
@@ -63,7 +65,7 @@ const D3PeriodDataVisualization = () => {
           RAW Period Data visualization
         </h3>
 
-        <PeriodChart data={csvData} availableDates={availableDateIntervals} />
+        <LargeChart data={csvData} availableDates={availableDateIntervals} />
       </div>
 
       <h3 className="text-xl text-center text-blue-500 py-5">Tabular Data,</h3>

@@ -10,11 +10,11 @@ import dayjs from 'dayjs';
 import MeasurementValues from './(components)/line-values';
 
 interface LineChartProps {
-  data: PeriodData[];
+  data: any[];
   availableDates: string[];
 }
 
-const PeriodChart: React.FC<LineChartProps> = ({ data, availableDates }) => {
+const LargeChart: React.FC<LineChartProps> = ({ data, availableDates }) => {
   const svgRef = useRef<SVGSVGElement>(null);
   const [timeInterval, setTimeInterval] = useState<TimeInterval>(
     TimeInterval.FIFTEEN_MINUTES
@@ -36,7 +36,7 @@ const PeriodChart: React.FC<LineChartProps> = ({ data, availableDates }) => {
   }, [availableDates]);
 
   function constructLineGraph(
-    data: PeriodData[],
+    data: any[],
     timeInterval: TimeInterval,
     _selectedMeasurements: (keyof PeriodData)[]
   ) {
@@ -65,7 +65,7 @@ const PeriodChart: React.FC<LineChartProps> = ({ data, availableDates }) => {
 
     // define the x and y domains
 
-    x.domain(d3.extent(data, (d) => d.ENDDATETIME) as [Date, Date]);
+    x.domain(d3.extent(data, (d) => d.ENDTIME) as [Date, Date]);
     y.domain([
       d3.min(data, (d) => d.LAFMIN) as number,
       d3.max(data, (d) => d.LAFMAX) as number,
@@ -120,7 +120,6 @@ const PeriodChart: React.FC<LineChartProps> = ({ data, availableDates }) => {
     //Add horizontal gridlines
     svg
       .selectAll('yGrid')
-      //@ts-expect-error - TS doesn't know that d is a number
       .data(y.ticks(d3.max(data, (d) => d.LAFMAX) / 10).slice(1))
       .join('line')
       .attr('x1', 0)
@@ -139,14 +138,15 @@ const PeriodChart: React.FC<LineChartProps> = ({ data, availableDates }) => {
     const generateLineGraphs = (properties: (keyof PeriodData)[]) => {
       return properties.map((property) =>
         d3
-          .line<PeriodData>()
-          .x((d) => x(d.ENDDATETIME))
+          .line<any>()
+          .x((d) => x(d.ENDTIME))
           .y((d) => y(+d[property]))
       );
     };
     const lineGenerators = generateLineGraphs(
       selectedMeasurements || _selectedMeasurements
     );
+    console.log(lineGenerators);
 
     if (lineGenerators.length) {
       lineGenerators.map((lineGenerator, index) => {
@@ -182,7 +182,7 @@ const PeriodChart: React.FC<LineChartProps> = ({ data, availableDates }) => {
     listeningRect.on('mousemove', function (event) {
       const [xCoord] = d3.pointer(event, svgRef.current);
       const bisectDate = d3.bisector(
-        (d: PeriodData, x: Date) => +d.ENDDATETIME - +x
+        (d: any, x: Date) => +d.ENDTIME - +x
       ).center;
       const x0 = x.invert(xCoord);
       const i = bisectDate(data, x0, 1);
@@ -192,11 +192,11 @@ const PeriodChart: React.FC<LineChartProps> = ({ data, availableDates }) => {
         data[
           d1 &&
           //@ts-expect-error - TS doesn't know that d0 and d1 are PeriodData objects
-          Math.abs(x0 - d0.ENDDATETIME) > Math.abs(d1.ENDDATETIME - x0)
+          Math.abs(x0 - d0.ENDTIME) > Math.abs(d1.ENDTIME - x0)
             ? i
             : i - 1
         ];
-      const xPos = x(d.ENDDATETIME);
+      const xPos = x(d.ENDTIME);
       const yPos = y(d.LAFMAX);
 
       // Update the circle position
@@ -211,7 +211,7 @@ const PeriodChart: React.FC<LineChartProps> = ({ data, availableDates }) => {
         .style('left', `${xPos + 100}px`)
         .style('top', `${yPos}px`)
         .html(
-          `<strong>Time:</strong> ${dayjs(d.ENDDATETIME).format(
+          `<strong>Time:</strong> ${dayjs(d.ENDTIME).format(
             'HH:mm'
           )}<br><strong>LAFMAX:</strong> ${
             d.LAFMAX !== undefined ? d.LAFMAX + 'dB' : 'N/A'
@@ -266,20 +266,18 @@ const PeriodChart: React.FC<LineChartProps> = ({ data, availableDates }) => {
       try {
         // const filteredData = data.filter(
         //   (d) =>
-        //     d.ENDDATETIME?.toString().split(' ')[0] ===
+        //     d.ENDTIME?.toString().split(' ')[0] ===
         //     new Date(selectedData!).toISOString().split('T')[0]
         // );
-        const compareMinutes = (a: PeriodData, b: PeriodData) => {
-          return +a.ENDDATETIME - +b.ENDDATETIME;
+        const compareMinutes = (a: any, b: any) => {
+          return +a.ENDTIME - +b.ENDTIME;
         };
         const typedData = data
           .map((d) => ({
             ...d,
-            ENDDATETIME: new Date(d.ENDDATETIME),
+            ENDTIME: new Date(d.ENDTIME),
             LAFMAX: +d.LAFMAX,
             LAFMIN: +d.LAFMIN,
-            LAE: +d.LAE,
-            LAEQ: +d.LAEQ,
           }))
           .sort(compareMinutes);
 
@@ -340,4 +338,4 @@ const PeriodChart: React.FC<LineChartProps> = ({ data, availableDates }) => {
   );
 };
 
-export default PeriodChart;
+export default LargeChart;

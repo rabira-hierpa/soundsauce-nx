@@ -1,12 +1,10 @@
-import React, { Dispatch, SetStateAction } from 'react';
+import React from 'react';
 import { TimeInterval } from '../../../types/time-interval';
 import clsx from 'clsx';
 
 type ITimeIntervalProps = {
   timeInterval: TimeInterval;
-  setTimeInterval: (
-    interval: TimeInterval
-  ) => Dispatch<SetStateAction<TimeInterval>>;
+  setInterval: (interval: TimeInterval) => void;
 };
 
 const TimeIntervals = [
@@ -30,7 +28,7 @@ const TimeIntervals = [
 
 const TimeIntervalGroup: React.FC<ITimeIntervalProps> = ({
   timeInterval,
-  setTimeInterval,
+  setInterval: setTimeInterval,
 }) => {
   return (
     <div className="flex flex-wrap justify-center p-5 space-5">
