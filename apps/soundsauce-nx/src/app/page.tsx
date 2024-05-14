@@ -57,8 +57,8 @@ export default function Index() {
       path: '/d3/period',
     },
     {
-      title: 'Line Chart',
-      path: '/d3/line',
+      title: 'Sample Large Charts',
+      path: '/d3/sample',
     },
   ]);
   const [todos, setTodos] = useState<Todo[]>([]);
