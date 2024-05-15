@@ -7,7 +7,7 @@ import { ParsedPeriodData, PeriodData } from '../../types/period-types';
 import LargeChart from '../charts/LargeChart';
 
 const D3PeriodDataVisualization = () => {
-  const [csvData, setCsvData] = useState<any>([]);
+  const [csvData, setCsvData] = useState<PeriodData[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [availableDateIntervals, setAvailableDateIntervals] = useState<
     string[]
@@ -19,17 +19,16 @@ const D3PeriodDataVisualization = () => {
       .then((data: any) => {
         const result = Papa.parse(data, {
           header: true,
-        }) as any;
-        // const dates = result.data.map(
-        //   (d) => String(d.ENDDATETIME).split(' ')[0]
-        // );
-        // const uniqueDates = new Set(dates);
-        // const _dateIntervals = Array.from(uniqueDates);
-        console.log({ result: result.data[0] });
+        }) as ParsedPeriodData;
+        const dates = result.data.map(
+          (d) => String(d.ENDDATETIME).split(' ')[0]
+        );
+        const uniqueDates = new Set(dates);
+        const _dateIntervals = Array.from(uniqueDates);
         setCsvData(result.data);
-        // setAvailableDateIntervals(
-        //   _dateIntervals.filter((value) => value !== 'undefined')
-        // );
+        setAvailableDateIntervals(
+          _dateIntervals.filter((value) => value !== 'undefined')
+        );
       })
       .catch((err) => {
         console.error({ err });
