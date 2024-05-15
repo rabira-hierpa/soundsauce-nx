@@ -264,15 +264,15 @@ const PeriodChart: React.FC<LineChartProps> = ({ data, availableDates }) => {
   useEffect(() => {
     if (svgRef.current && !!data.length && selectedData) {
       try {
-        // const filteredData = data.filter(
-        //   (d) =>
-        //     d.ENDDATETIME?.toString().split(' ')[0] ===
-        //     new Date(selectedData!).toISOString().split('T')[0]
-        // );
+        const filteredData = data.filter(
+          (d) =>
+            d.ENDDATETIME?.toString().split(' ')[0] ===
+            new Date(selectedData!).toISOString().split('T')[0]
+        );
         const compareMinutes = (a: PeriodData, b: PeriodData) => {
           return +a.ENDDATETIME - +b.ENDDATETIME;
         };
-        const typedData = data
+        const typedData = filteredData
           .map((d) => ({
             ...d,
             ENDDATETIME: new Date(d.ENDDATETIME),
