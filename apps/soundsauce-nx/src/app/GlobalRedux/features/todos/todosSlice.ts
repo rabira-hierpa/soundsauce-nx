@@ -1,5 +1,7 @@
+/* eslint-disable @typescript-eslint/no-unused-expressions */
 import { PayloadAction, createSlice } from '@reduxjs/toolkit';
 import { baseUrl } from '../../../api/endpoints/todo.endpoints';
+import { Todo } from '../../../types';
 
 const slice = createSlice({
   name: 'todos',
