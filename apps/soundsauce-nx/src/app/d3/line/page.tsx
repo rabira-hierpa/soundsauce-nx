@@ -66,21 +66,6 @@ const D3Visualization = () => {
     }
   }, [csvData]);
 
-  const [height, setHeight] = useState(window.innerHeight);
-
-  useEffect(() => {
-    const handleResize = () => {
-      setHeight(window.innerHeight);
-    };
-
-    window.addEventListener('resize', handleResize);
-
-    // Cleanup function to remove the event listener when the component unmounts
-    return () => {
-      window.removeEventListener('resize', handleResize);
-    };
-  }, []);
-
   if (loading) {
     return <div>Loading data...</div>;
   }
@@ -91,7 +76,7 @@ const D3Visualization = () => {
         <LineChart
           data={transformedData.splice(0, 800)}
           width={1024}
-          height={height - 200}
+          height={700}
         />
       )}
       {/* <DataGrid

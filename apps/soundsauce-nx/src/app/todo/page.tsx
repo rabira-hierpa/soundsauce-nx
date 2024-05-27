@@ -1,5 +1,5 @@
 'use client';
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   TextField,
   Button,
@@ -10,9 +10,9 @@ import {
   Container,
 } from '@mui/material';
 import { makeStyles } from '@mui/styles';
-import { useState } from 'react';
 import { useSelector } from 'react-redux';
 import StoreProvider from '../GlobalRedux/StoreProvider';
+import { Todo } from '../types';
 
 const StyledPage = ({ children }: { children: React.ReactNode }) => (
   <div>{children}</div>
@@ -46,7 +46,7 @@ const useStyles = makeStyles({
   },
 });
 
-export default function Todo() {
+export default function Todos() {
   const [inputVal, setInputVal] = useState('');
   const [todos, setTodos] = useState<any>([]);
   const [loading, setLoading] = useState(true);
