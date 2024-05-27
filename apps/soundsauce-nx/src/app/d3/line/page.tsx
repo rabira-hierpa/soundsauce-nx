@@ -79,7 +79,7 @@ const D3Visualization = () => {
           height={700}
         />
       )}
-      {/* <DataGrid
+      <DataGrid
         autoHeight
         rows={csvData?.data ?? []}
         columns={getColumns(csvData?.data ?? [])}
@@ -89,7 +89,7 @@ const D3Visualization = () => {
         disableColumnMenu
         disableColumnSelector
         disableDensitySelector
-      /> */}
+      />
     </div>
   );
 };
