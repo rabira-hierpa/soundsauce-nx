@@ -60,6 +60,10 @@ export default function Index() {
       title: 'Sample Large Charts',
       path: '/d3/sample',
     },
+    {
+      title:'Chart Js',
+      path: '/chartjs'
+    }
   ]);
   const [todos, setTodos] = useState<Todo[]>([]);
   const [isEdited, setIsEdited] = useState(false);
