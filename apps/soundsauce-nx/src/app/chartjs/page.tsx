@@ -152,7 +152,7 @@ const Page = () => {
           step={10}
         />
       </div>
-      <div className="bg-white p-4 shadow-md  w-full">
+      <div className="bg-white p-4 shadow-md min-h-[700px]  w-full">
         {loading ? (
           <p className="flex justify-center items-center">Loading...</p>
         ) : (
