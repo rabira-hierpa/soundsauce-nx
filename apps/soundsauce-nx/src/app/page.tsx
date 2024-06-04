@@ -122,14 +122,11 @@ export default function Index() {
   return (
     <StyledPage>
       <div className="wrapper">
-        <div className="container">
+        <div className="px-20">
           <div className="flex flex-col text-center justify-center">
             <h1 className="text-6xl py-10 font-semibold text-violet-500">
-              MUI Todo{' '}
+             D3 and Chart.js Prototypes{' '}
             </h1>
-            <Link className="text-3xl text-purple-300" href="/todo">
-              👆🏾 Goto Todo with Redux Implementation
-            </Link>
             <div className="flex space-x-5 justify-center py-5">
               {charts.map((chart) => (
                 <Link
@@ -141,62 +138,8 @@ export default function Index() {
                 </Link>
               ))}
             </div>
-            <div className="text-xl pt-10">👇🏾 Todo without Redux</div>
           </div>
-          <Container component="main" className={classes.container}>
-            <TextField
-              variant="outlined"
-              onChange={onChange}
-              label="Title"
-              value={inputVal}
-              className={classes.input}
-            />
-            <Button
-              size="large"
-              variant={isEdited ? 'outlined' : 'contained'}
-              color="primary"
-              onClick={handleClick}
-              className={classes.addButton}
-              disabled={inputVal ? false : true}
-            >
-              {isEdited ? 'Edit Task' : 'Add Task'}
-            </Button>
-            <List>
-              {todos.map((todo: any) => {
-                return (
-                  <ListItem key={todo.id} className={classes.list}>
-                    <Checkbox
-                      onClick={() => handleDone(todo.id)}
-                      checked={todo.isDone}
-                    />
-                    <Typography
-                      className={classes.text}
-                      style={{ color: todo.isDone ? 'green' : '' }}
-                      key={todo.id}
-                    >
-                      {todo.val}
-                    </Typography>
-                    <Button
-                      onClick={() => handleEdit(todo.id)}
-                      variant="contained"
-                      className={classes.listButtons}
-                    >
-                      Edit
-                    </Button>
-                    <Button
-                      onClick={() => onDelete(todo.id)}
-                      color="secondary"
-                      variant="contained"
-                      className={classes.listButtons}
-                    >
-                      delete
-                    </Button>
-                  </ListItem>
-                );
-              })}
-            </List>
-          </Container>
-        </div>
+         </div>
       </div>
     </StyledPage>
   );

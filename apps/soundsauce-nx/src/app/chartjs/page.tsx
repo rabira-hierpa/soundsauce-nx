@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { Line } from 'react-chartjs-2';
 import {
   Chart,
@@ -12,19 +12,18 @@ import {
   Legend,
 } from 'chart.js';
 import zoomPlugin from 'chartjs-plugin-zoom';
-import { ParsedPeriodData, PeriodData } from '../types/period-types';
-import Papa from 'papaparse';
+import { PeriodData } from '../types/period-types';
 import dayjs from 'dayjs';
-import TimeIntervalGroup from '../d3/charts/(components)/time-interval';
 import MeasurementValues from '../d3/charts/(components)/line-values';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { DateCalendar } from '@mui/x-date-pickers/DateCalendar';
 import { TimeInterval } from '../types/time-interval';
 import { Slider } from '@mui/material';
+import { ProcessedSVANDATA } from '../types/svan-types';
 
 const Page = () => {
-  const [data, setData] = useState<PeriodData[]>([]);
+  const [data, setData] = useState<ProcessedSVANDATA[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [chartData, setChartData] = useState<any>({});
   const [availableDateIntervals, setAvailableDateIntervals] = useState<
@@ -41,46 +40,86 @@ const Page = () => {
   );
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [size, setSize] = useState<number>(10);
+  const [showAllDates, setShowAllDates] = useState<boolean>(false);
   const chartRef = useRef(null);
-  const formatChartData = (data: PeriodData[]) => {
+
+  const generateData = (maxPoint: number) => {
+    const allData: ProcessedSVANDATA[] = [];
+    let date = dayjs('2023-01-02');
+    for (let index = 0; index < maxPoint; index++) {
+      date = dayjs(date).add(1, 'minute'); // Update date inside the loop
+      const element: ProcessedSVANDATA = {
+        ID: (index + 1).toString(),
+        DATETIME: date,
+        LAFmax: parseFloat((Math.random() * 100).toFixed(2)),
+        LAFmin: parseFloat((Math.random() * 100).toFixed(2)),
+        LAeq: parseFloat((Math.random() * 100).toFixed(2)),
+        LAeqLn: parseFloat((Math.random() * 100).toFixed(2)),
+      };
+      allData.push(element);
+    }
+    return allData;
+  };
+
+  const mappedData = (data: ProcessedSVANDATA[]) =>
+    data.reduce(
+      (acc, item: ProcessedSVANDATA) => {
+        acc.LAE.push(Number(item.LAeq));
+        acc.LAEQ.push(Number(item.LAeqLn));
+        acc.LAFMAX.push(Number(item.LAFmax));
+        acc.LAFMIN.push(Number(item.LAFmin));
+        return acc;
+      },
+      {
+        LAE: [] as number[],
+        LAEQ: [] as number[],
+        LAFMAX: [] as number[],
+        LAFMIN: [] as number[],
+      }
+    );
+  const formatChartData = useCallback((data: ProcessedSVANDATA[]) => {
     return {
-      labels: data.map((item: PeriodData) => {
-        return dayjs(item.ENDDATETIME).format('HH:MM MM/YY');
+      labels: data.map((item: ProcessedSVANDATA) => {
+        return dayjs(item.DATETIME).format('HH:MM:ss');
       }),
       datasets: [
         {
           label: 'LAE',
-          data: data.map((item: PeriodData) => +item.LAE),
+          data: mappedData(data).LAE,
           fill: false,
           borderColor: 'rgb(75, 192, 192)',
           tension: 0.1,
         },
         {
           label: 'LAEQ',
-          data: data.map((item: PeriodData) => +item.LAEQ),
+          data: mappedData(data).LAEQ,
           fill: false,
           borderColor: 'rgb(25, 102, 92)',
           tension: 0.1,
         },
         {
           label: 'LAFMAX',
-          data: data.map((item: PeriodData) => +item.LAFMAX),
+          data: mappedData(data).LAFMAX,
           fill: false,
           borderColor: 'rgb(10, 250, 102)',
           tension: 0.1,
         },
         {
           label: 'LAFMIN',
-          data: data.map((item: PeriodData) => +item.LAFMIN),
+          data: mappedData(data).LAFMIN,
           fill: false,
           borderColor: 'rgb(175, 102, 132)',
           tension: 0.1,
         },
       ],
     };
-  };
-  const lineChartOptions = {};
+  }, []);
 
+  const handleResetZoom = () => {
+    if (chartRef.current) {
+      chartRef.current.resetZoom();
+    }
+  };
   useEffect(() => {
     Chart.register(
       CategoryScale,
@@ -93,49 +132,38 @@ const Page = () => {
       zoomPlugin
     );
     setLoading(true);
-    fetch(`/api/csv/get_period_data?size=${size}k`)
-      .then((res) => res.text())
-      .then((data: any) => {
-        const result = Papa.parse(data, {
-          header: true,
-        }) as ParsedPeriodData;
-
-        // Check if result.data exists before using it
-        if (result.data) {
-          const dates = result.data.map(
-            (d) => String(d.ENDDATETIME).split(' ')[0]
-          );
-
-          const uniqueDates = new Set(dates);
-          const _dateIntervals = Array.from(uniqueDates);
-          setData(result.data);
-          setAvailableDateIntervals(
-            _dateIntervals.filter((value) => value !== 'undefined')
-          );
-          setSelectedDate(new Date(_dateIntervals[0]));
-          const _data = formatChartData(result.data);
-          setChartData(_data);
-        } else {
-          console.error('Data is empty or undefined');
-        }
-      })
-      .catch((err) => {
-        console.error({ err });
-      })
-      .finally(() => setLoading(false));
+    const data = generateData(size * 1000);
+    const dates = data.map((d) =>
+      String(dayjs(d.DATETIME).format('YYYY-MM-DD'))
+    );
+    const uniqueDates = new Set(dates);
+    const _dateIntervals = Array.from(uniqueDates);
+    setData(data);
+    setAvailableDateIntervals(
+      _dateIntervals.filter((value) => value !== 'undefined')
+    );
+    setSelectedDate(new Date(_dateIntervals[0]));
+    const _data = formatChartData(data);
+    setChartData(_data);
+    setLoading(false);
   }, [size]);
 
   useEffect(() => {
-    let filteredData = data;
-    if (selectedDate) {
-      console.log(selectedDate);
-      filteredData = data.filter((item) =>
-        dayjs(item.ENDDATETIME).isSame(dayjs(selectedDate), 'day')
-      );
-    }
+    const filteredData = data.filter((item) =>
+      dayjs(item.DATETIME).isSame(dayjs(selectedDate), 'day')
+    );
     const _data = formatChartData(filteredData);
     setChartData(_data);
-  }, [availableDateIntervals, data, selectedDate]);
+    handleResetZoom();
+  }, [data, formatChartData, selectedDate]);
+
+  useEffect(() => {
+    if (showAllDates) {
+      const allData = formatChartData(data.slice(1, data.length));
+      setChartData(allData);
+      setShowAllDates(false);
+    }
+  }, [showAllDates]);
 
   return (
     <div className="p-10">
@@ -152,7 +180,7 @@ const Page = () => {
           step={10}
         />
       </div>
-      <div className="bg-white p-4 shadow-md  w-full">
+      <div className="bg-white p-4 shadow-md h-[700px] w-full">
         {loading ? (
           <p className="flex justify-center items-center">Loading...</p>
         ) : (
@@ -167,11 +195,13 @@ const Page = () => {
             }}
             options={{
               animation: false,
+              // parsing: false,
+              normalized: true,
+              spanGaps: true,
               plugins: {
                 decimation: {
                   enabled: true,
-                  algorithm: 'lttb',
-                  samples: 100,
+                  algorithm: 'min-max',
                 },
                 zoom: {
                   zoom: {
@@ -198,9 +228,7 @@ const Page = () => {
       </div>
       <div className="flex flex-col flex-grow text-center py-20">
         <div className="flex">
-          <button onClick={() => chartRef?.current.resetZoom()}>
-            Reset Zoom
-          </button>
+          <button onClick={handleResetZoom}>Reset Zoom</button>
         </div>
         <div>
           {!!availableMeasurements.length && (
@@ -216,13 +244,15 @@ const Page = () => {
           <p className="text-xl font-semibold">Range</p>
           <button
             className="rounded-lg border-md border-teal-100"
-            onClick={() => setSelectedDate(null)}
+            onClick={() => setShowAllDates(true)}
           >
             Show all dates
           </button>
           <DateCalendar
             value={dayjs(selectedDate)}
-            onChange={(newValue) => setSelectedDate(newValue)}
+            onChange={(newValue) => {
+              return setSelectedDate(newValue);
+            }}
             shouldDisableDate={(date) =>
               !availableDateIntervals.includes(date.format('YYYY-MM-DD'))
             }
