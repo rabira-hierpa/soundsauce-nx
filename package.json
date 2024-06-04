@@ -17,6 +17,7 @@
     "@mui/x-data-grid": "^7.3.0",
     "@mui/x-date-pickers": "^7.3.1",
     "@types/papaparse": "^5.3.14",
+    "chartjs": "^0.3.24",
     "chartjs-plugin-zoom": "^2.0.1",
     "clsx": "^2.1.1",
     "d3": "^7.9.0",
@@ -25,6 +26,7 @@
     "next": "14.0.4",
     "papaparse": "^5.4.1",
     "react": "18.2.0",
+    "react-chartjs-2": "^5.2.0",
     "react-dom": "18.2.0",
     "react-spring": "^9.7.3",
     "tslib": "^2.3.0"
